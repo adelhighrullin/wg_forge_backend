@@ -58,3 +58,17 @@ CREATE TABLE cats_stat (
     whiskers_length_median numeric,
     whiskers_length_mode integer[]
 );
+
+-- task 1
+insert into cat_colors_info (color, count) select color, count(*) from cats group by color order by color asc;
+
+-- task 2
+insert into cats_stat (tail_length_mean, tail_length_median, tail_length_mode, whiskers_length_mean, whiskers_length_median, whiskers_length_mode)
+values (
+    (select round(avg(tail_length), 1) from cats),
+    (select percentile_cont(0.5) within group (order by tail_length) from cats),
+    (select ARRAY (with modes as (select tail_length as tlen, count(tail_length) as clen from cats group by tail_length order by count(tail_length) desc) select tlen from modes where clen = (select max(clen) from modes) order by tlen asc)),
+    (select round(avg(whiskers_length), 1) from cats),
+    (select percentile_cont(0.5) within group (order by whiskers_length) from cats),
+    (select ARRAY (with modes as (select whiskers_length as wlen, count(whiskers_length) as clen from cats group by whiskers_length order by count(whiskers_length) desc) select wlen from modes where clen = (select max(clen) from modes) order by wlen asc))
+);
